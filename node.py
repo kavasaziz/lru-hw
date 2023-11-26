@@ -1,5 +1,6 @@
 import time
 
+
 class Node:
     def __init__(self, key, value, expiration, priority):
         self.key = key
@@ -42,14 +43,17 @@ class LRUCache:
             current = self.tail.prev
 
         # If still over capacity, evict based on priority and recency
-        if len(self.cache) > self.capacity:
+        if len(self.cache) >= self.capacity:
             current = self.tail.prev
+            remove_node = self.tail.prev
             lowest_priority = current.priority
-            while current != self.head and current.priority == lowest_priority:
+            while current != self.head:
+                if lowest_priority > current.priority:
+                    remove_node = current
                 current = current.prev
-            current = current.next  # Move to the first node with lowest priority
-            self.cache.pop(current.key)
-            self._remove_node(current)
+            # current = current.next  # Move to the first node with lowest priority
+            self.cache.pop(remove_node.key)
+            self._remove_node(remove_node)
 
     def insert(self, key, value, expiration, priority):
         if key in self.cache:
@@ -88,27 +92,32 @@ class LRUCache:
             return node.value
         return None
 
+    def get_cache(self):
+        return [self.get(k) for k in self.cache]
+
+
 def test_case_evict():
-    cache = LRUCache(3)
-    cache.insert("a", 1, time.time() + 60, 2)
-    cache.insert("b", 2, time.time() + 60, 1)
-    cache.insert("c", 3, time.time() + 60, 3)
-    print("Before eviction:", [cache.get(k) for k in ["a", "b", "c"]])
-    cache.insert("d", 4, time.time() + 60, 4)
-    print("After eviction:", [cache.get(k) for k in ["a", "b", "c", "d"]])
+    lru_cache = LRUCache(3)
+    lru_cache.insert("a", 1, time.time() + 60, 2)
+    lru_cache.insert("b", 2, time.time() + 60, 1)
+    lru_cache.insert("c", 3, time.time() + 60, 3)
+    print("Before eviction:", lru_cache.get_cache())
+    lru_cache.insert("d", 4, time.time() + 60, 4)
+    print("After eviction:", lru_cache.get_cache())
+
 
 def test_case_expire():
-    cache = LRUCache(3)
-    cache.insert("a", 1, time.time() + 5, 2)  # key "a", value 1, expires in 5 seconds, priority 2
-    cache.insert("b", 2, time.time() + 10, 1)  # key "b", value 2, expires in 10 seconds, priority 1
-    cache.insert("c", 3, time.time() + 15, 3)  # key "c", value 3, expires in 15 seconds, priority 3
-    print(cache.get("a"))  # Should return 1
+    lru_cache = LRUCache(3)
+    lru_cache.insert("a", 1, time.time() + 5, 2)  # key "a", value 1, expires in 5 seconds, priority 2
+    lru_cache.insert("b", 2, time.time() + 10, 1)  # key "b", value 2, expires in 10 seconds, priority 1
+    lru_cache.insert("c", 3, time.time() + 15, 3)  # key "c", value 3, expires in 15 seconds, priority 3
+    print(lru_cache.get("a")) # Should return 1
     time.sleep(6)  # Wait for "a" to expire
-    print(cache.get("a"))  # Should return None as "a" is expired
-    cache.insert("d", 4, time.time() + 20, 2)  # Insert "d", causing eviction if needed
-    print(cache.get("b"))  # Should return 2
-    print(cache.get("c"))  # Should return 3
-    print(cache.get("d"))  # Should return 4
+    print(lru_cache.get("a"))  # Should return None as "a" is expired
+    lru_cache.insert("d", 4, time.time() + 20, 2)  # Insert "d", causing eviction if needed
+    print(lru_cache.get("b"))  # Should return 2
+    print(lru_cache.get("c"))  # Should return 3
+    print(lru_cache.get("d"))  # Should return 4
 
 
 print("======================>Evict")
